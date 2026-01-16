@@ -63,9 +63,9 @@ class OrderService {
         }
       }
 
-      // 4. Validate and Update Stock
+
       for (const [inputId, requirement] of inputsMap.entries()) {
-        // Lock the input row for update to prevent race conditions
+
         const inputEntity = await Input.findByPk(inputId, { 
           transaction: t,
           lock: true, 
