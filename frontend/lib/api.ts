@@ -32,16 +32,22 @@ export async function createOrder(items: { productId: string; quantity: number }
     const data = await response.json()
 
     if (response.status === 409) {
+      const errorData = data.details?.details;
       
-      
-      
+      if (errorData && Array.isArray(errorData.affectedProducts)) {
+        return {
+          success: false,
+          errors: errorData.affectedProducts.map((p: any) => ({
+            productId: String(p.id),
+            productName: p.name,
+            message: `Falta ${errorData.ingredient} (Necessário: ${errorData.required}, Estoque: ${errorData.available})`,
+          })),
+        }
+      }
+
       return {
         success: false,
-        errors: data.details.map((d: any) => ({
-          productId: String(d.productId),
-          productName: d.name,
-          message: `Estoque insuficiente (Disponível: ${d.stock_quantity})`,
-        })),
+        message: data.error || "Erro de estoque não especificado",
       }
     }
 
