@@ -111,5 +111,3 @@ A interface foi pensada para ser ágil (Mobile-first) para garçons:
 ├── docker-compose.yml  # Configuração do Postgres
 └── start.sh            # Script de Inicialização
 ```
-
-Feito com 💜 por Arthur Moreira.
