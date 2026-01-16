@@ -29,7 +29,7 @@ class OrderService {
             {
               model: Input,
               as: 'inputs',
-              through: { attributes: ['quantity_needed'] }, // Get pivot data
+              through: { attributes: ['quantity_needed'] },
             },
           ],
           transaction: t,
