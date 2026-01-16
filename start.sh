@@ -28,6 +28,12 @@ sleep 5
 echo "🔙 Configurando o Backend..."
 cd backend
 
+# Verifica se o arquivo .env existe, se não, cria a partir do exemplo
+if [ ! -f ".env" ]; then
+    echo "⚙️  Criando arquivo .env a partir de .env.example..."
+    cp .env.example .env
+fi
+
 if [ ! -d "node_modules" ]; then
     echo "📦 Instalando as dependências do backend..."
     npm install
