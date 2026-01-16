@@ -4,14 +4,13 @@ import { Input, Product, ProductInput, Order, OrderItem } from '../models';
 const seed = async () => {
   try {
     await sequelize.authenticate();
-    // Force sync to clear DB and recreate tables
+
     await sequelize.sync({ force: true }); 
     console.log('Database synced (cleared).');
 
-    // 1. Create Inputs (Ingredients)
     const inputs = await Input.bulkCreate([
       { name: 'Pão de Hambúrguer', stock_quantity: 50 },
-      { name: 'Carne Bovina 150g', stock_quantity: 20 }, // Low stock for testing
+      { name: 'Carne Bovina 150g', stock_quantity: 20 },
       { name: 'Queijo Cheddar', stock_quantity: 100 },
       { name: 'Bacon Fatiado', stock_quantity: 100 },
       { name: 'Alface Americana', stock_quantity: 40 },
@@ -19,10 +18,9 @@ const seed = async () => {
       { name: 'Maionese Especial', stock_quantity: 200 }
     ]);
     
-    // Helper map
+
     const i = (name: string) => inputs.find(inp => inp.name === name)!.id;
 
-    // 2. Create Products
     const products = await Product.bulkCreate([
       { name: 'X-Burger', price: 15.00, category: 'Hambúrgueres', available: true },
       { name: 'X-Bacon', price: 18.00, category: 'Hambúrgueres', available: true },
@@ -33,7 +31,6 @@ const seed = async () => {
 
     const p = (name: string) => products.find(prod => prod.name === name)!.id;
 
-    // 3. Create Recipes (ProductInputs)
     await ProductInput.bulkCreate([
       // X-Burger: Pão, Carne, Queijo
       { product_id: p('X-Burger'), input_id: i('Pão de Hambúrguer'), quantity_needed: 1 },
