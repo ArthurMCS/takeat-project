@@ -1,68 +1,68 @@
 #!/bin/bash
 
-# Exit on error
+# Encerra o script em caso de erro
 set -e
 
-# Function to handle script exit
+# Função para lidar com o encerramento do script
 cleanup() {
-    echo "Stopping all services..."
-    # Kill child processes (background jobs)
+    echo "Encerrando todos os serviços..."
+    # Mata os processos filhos (tarefas em segundo plano)
     kill $(jobs -p) 2>/dev/null
     exit
 }
 
-# Trap SIGINT (Ctrl+C) to cleanup
+# Captura o sinal SIGINT (Ctrl+C) para executar a limpeza
 trap cleanup SIGINT
 
-echo "🚀 Initializing Takeat Project..."
+echo "🚀 Inicializando o Projeto Takeat..."
 
-# 1. Start Database
-echo "🐘 Starting PostgreSQL container..."
+# 1. Iniciar o Banco de Dados
+echo "🐘 Subindo o container do PostgreSQL..."
 docker-compose up -d
 
-# Wait for DB to be ready
-echo "⏳ Waiting for Database to be ready..."
+# Aguarda o banco estar pronto
+echo "⏳ Aguardando o banco de dados inicializar..."
 sleep 5
 
-# 2. Setup Backend
-echo "🔙 Setting up Backend..."
+# 2. Configurar o Backend
+echo "🔙 Configurando o Backend..."
 cd backend
 
 if [ ! -d "node_modules" ]; then
-    echo "📦 Installing backend dependencies..."
+    echo "📦 Instalando as dependências do backend..."
     npm install
 else 
-    echo "📦 Backend dependencies already installed."
+    echo "📦 Dependências do backend já instaladas."
 fi
 
-echo "🌱 Running Backend Seeds..."
+echo "🌱 Populando o banco de dados (Seeds)..."
 npm run seed
 
-echo "🚀 Starting Backend Server..."
+echo "🚀 Iniciando o servidor do Backend..."
 npm run dev &
 BACKEND_PID=$!
 cd ..
 
-# 3. Setup Frontend
-echo "🎨 Setting up Frontend..."
+# 3. Configurar o Frontend
+echo "🎨 Configurando o Frontend..."
 cd frontend
 
 if [ ! -d "node_modules" ]; then
-    echo "📦 Installing frontend dependencies..."
+    echo "📦 Instalando as dependências do frontend..."
     npm install
 else
-    echo "📦 Frontend dependencies already installed."
+    echo "📦 Dependências do frontend já instaladas."
   fi
 
-echo "🚀 Starting Frontend..."
+echo "🚀 Iniciando o Frontend..."
 npm run dev &
 FRONTEND_PID=$!
 cd ..
 
-echo "✅ All services started!"
-echo "📡 Backend running on http://localhost:3001"
-echo "💻 Frontend running on http://localhost:3000"
-echo "Press Ctrl+C to stop all services."
+echo "✅ Todos os serviços foram iniciados!"
+echo "📡 Backend rodando em: http://localhost:3001"
+echo "💻 Frontend rodando em: http://localhost:3000"
+echo "Pressione Ctrl+C para encerrar todos os serviços."
 
-# Wait for processes to keep the script running
+# Mantém o script rodando enquanto os processos do back e front estiverem ativos
 wait $BACKEND_PID $FRONTEND_PID
