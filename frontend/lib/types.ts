@@ -19,6 +19,7 @@ export interface OrderError {
 
 export interface OrderResponse {
   success: boolean
-  errors?: OrderError[]
   message?: string
+  errors?: OrderError[]
+  isNetworkError?: boolean
 }

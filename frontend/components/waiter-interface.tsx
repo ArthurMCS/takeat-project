@@ -6,11 +6,13 @@ import { Cart } from "./cart"
 import { ErrorDialog } from "./error-dialog"
 import { fetchProducts, createOrder } from "@/lib/api"
 import type { CartItem, OrderError, Product } from "@/lib/types"
-import { ShoppingCart, Utensils, PanelRightOpen, PanelRightClose } from "lucide-react"
+import { ShoppingCart, Utensils, PanelRightOpen, PanelRightClose, Wifi, WifiOff, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useOfflineQueue } from "@/hooks/use-offline-queue"
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 export function WaiterInterface() {
   const [products, setProducts] = useState<Product[]>([])
@@ -19,12 +21,24 @@ export function WaiterInterface() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showErrorDialog, setShowErrorDialog] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  
+  const { queue, isOnline, addToQueue, syncErrors, clearSyncErrors } = useOfflineQueue()
 
   useEffect(() => {
     fetchProducts()
       .then(setProducts)
       .catch(console.error)
   }, [])
+
+
+  useEffect(() => {
+    if (syncErrors.length > 0) {
+      const allErrors = syncErrors.flatMap(s => s.errors)
+      setErrors(allErrors)
+      setShowErrorDialog(true)
+      clearSyncErrors() 
+    }
+  }, [syncErrors, clearSyncErrors])
 
   const categories = useMemo(() => {
     const cats = [...new Set(products.map((p) => p.category))]
@@ -79,6 +93,10 @@ export function WaiterInterface() {
     if (response.success) {
       setCart([])
       alert("Pedido enviado com sucesso!")
+    } else if (response.isNetworkError) {
+      addToQueue(items)
+      setCart([])
+      alert("Sem conexão. Pedido salvo na fila e será enviado automaticamente.")
     } else if (response.errors) {
       setErrors(response.errors)
       setShowErrorDialog(true)
@@ -102,7 +120,25 @@ export function WaiterInterface() {
           <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary">
             <Utensils className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">Pedidos</h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold text-foreground leading-none">Pedidos</h1>
+            <div className="flex items-center gap-1 mt-1">
+              {!isOnline ? (
+                <span className="text-xs text-destructive flex items-center gap-1 font-medium">
+                   <WifiOff className="h-3 w-3" /> Offline
+                </span>
+              ) : (
+                <span className="text-xs text-green-600 flex items-center gap-1 font-medium">
+                   <Wifi className="h-3 w-3" /> Online
+                </span>
+              )}
+              {queue.length > 0 && (
+                <span className="text-xs text-amber-600 flex items-center gap-1 ml-2 font-medium">
+                   <RefreshCw className="h-3 w-3 animate-spin" /> {queue.length} na fila
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         <Sheet>
           <SheetTrigger asChild>
@@ -132,13 +168,33 @@ export function WaiterInterface() {
 
       {/* Menu Section */}
       <div className={cn("flex-1 overflow-auto transition-all duration-300", sidebarOpen ? "lg:mr-0" : "lg:mr-0")}>
-        <div className="hidden lg:flex items-center gap-3 p-6 border-b border-border bg-card">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary">
-            <Utensils className="h-6 w-6 text-primary-foreground" />
+        <div className="hidden lg:flex items-center justify-between p-6 border-b border-border bg-card">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary">
+              <Utensils className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Cardapio</h1>
+              <p className="text-sm text-muted-foreground">Selecione os itens do pedido</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Cardapio</h1>
-            <p className="text-sm text-muted-foreground">Selecione os itens do pedido</p>
+          
+          <div className="flex items-center gap-4">
+             {queue.length > 0 && (
+                <Badge variant="outline" className="gap-2 border-amber-500 text-amber-600">
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  {queue.length} Sincronizando
+                </Badge>
+              )}
+             {!isOnline ? (
+               <Badge variant="destructive" className="gap-2">
+                 <WifiOff className="h-4 w-4" /> Offline
+               </Badge>
+             ) : (
+               <Badge variant="outline" className="gap-2 text-green-600 border-green-200 bg-green-50">
+                 <Wifi className="h-4 w-4" /> Online
+               </Badge>
+             )}
           </div>
         </div>
         <MenuGrid

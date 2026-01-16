@@ -54,6 +54,7 @@ export async function createOrder(items: { productId: string; quantity: number }
     return {
       success: false,
       message: "Erro de conexão com o servidor",
+      isNetworkError: true,
     }
   }
 }
